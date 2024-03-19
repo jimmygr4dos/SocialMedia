@@ -1,9 +1,10 @@
-﻿using SocialMedia.Core.Entities;
+﻿using Microsoft.Extensions.Options;
+using SocialMedia.Core.CustomEntities;
+using SocialMedia.Core.Entities;
 using SocialMedia.Core.Exceptions;
 using SocialMedia.Core.Interfaces;
 using SocialMedia.Core.QueryFilters;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,17 +12,19 @@ namespace SocialMedia.Core.Services
 {
     public class PostService : IPostService
     {
+        private readonly PaginationOptions _paginationOptions;
         private readonly IUnitOfWork _unit;
         //private readonly IRepository<Post> _postRepository;
         //private readonly IRepository<User> _userRepository;
         //private readonly IPostRepository _postRepository;
         //private readonly IUserRepository _userRepository;
 
-        public PostService(IUnitOfWork unit)
+        public PostService(IUnitOfWork unit, IOptions<PaginationOptions> options)
         //public PostService(IRepository<Post> postRepository, IRepository<User> userRepository)
         //public PostService(IPostRepository postRepository, IUserRepository userRepository)
         {
             _unit = unit;
+            _paginationOptions = options.Value;
             //_postRepository = postRepository;
             //_userRepository = userRepository;
         }
@@ -31,8 +34,12 @@ namespace SocialMedia.Core.Services
             return await _unit.PostRepository.GetById(id);
         }
 
-        public IEnumerable<Post> GetPosts(PostQueryFilter filters)
+        //public IEnumerable<Post> GetPosts(PostQueryFilter filters)
+        public PagedList<Post> GetPosts(PostQueryFilter filters)
         {
+            filters.PageNumber = filters.PageNumber == 0 ? _paginationOptions.DefaultPageNumber : filters.PageNumber;
+            filters.PageSize = filters.PageSize == 0 ? _paginationOptions.DefaultPageSize : filters.PageSize;
+
             //Permite filtrar por userId, Date o Description
             var posts = _unit.PostRepository.GetAll();
 
@@ -49,7 +56,10 @@ namespace SocialMedia.Core.Services
                 posts = posts.Where(x => x.Description.ToLower().Contains(filters.Description.ToLower()));
             }
 
-            return posts;
+            var pagedPosts = PagedList<Post>.Create(posts, filters.PageNumber, filters.PageSize);
+
+            //return posts;
+            return pagedPosts;
         }
 
         public async Task InsertPost(Post post)

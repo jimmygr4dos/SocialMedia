@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SocialMedia.Core.Entities;
-using SocialMedia.Infrastructure.Data.Configurations;
+using System.Reflection;
 
 // Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
 // If you have enabled NRTs for your project, then un-comment the following line:
@@ -21,19 +21,24 @@ namespace SocialMedia.Infrastructure.Data
         public virtual DbSet<Comment> Comments { get; set; }
         public virtual DbSet<Post> Posts { get; set; }
         public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<Security> Securities { get; set; }
 
-//        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//        {
-//            if (!optionsBuilder.IsConfigured)
-//            {
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-//                optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=SocialMedia;Integrated Security = true");
-//            }
-//        }
+        //        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //        {
+        //            if (!optionsBuilder.IsConfigured)
+        //            {
+        //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+        //                optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=SocialMedia;Integrated Security = true");
+        //            }
+        //        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfiguration(new CommentConfiguration());
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            //modelBuilder.ApplyConfiguration(new SecurityConfiguration());
+
+            //modelBuilder.ApplyConfiguration(new CommentConfiguration());
 
             //modelBuilder.Entity<Comment>(entity =>
             //{
@@ -78,7 +83,7 @@ namespace SocialMedia.Infrastructure.Data
             //        .HasConstraintName("FK_Comentario_Usuario");
             //});
 
-            modelBuilder.ApplyConfiguration(new PostConfiguration());
+            //modelBuilder.ApplyConfiguration(new PostConfiguration());
 
             //modelBuilder.Entity<Post>(entity =>
             //{
@@ -115,7 +120,7 @@ namespace SocialMedia.Infrastructure.Data
             //        .HasConstraintName("FK_Publicacion_Usuario");
             //});
 
-            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            //modelBuilder.ApplyConfiguration(new UserConfiguration());
 
             //modelBuilder.Entity<User>(entity =>
             //{

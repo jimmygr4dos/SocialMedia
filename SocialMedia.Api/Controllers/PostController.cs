@@ -1,17 +1,22 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using SocialMedia.Api.Responses;
+using SocialMedia.Core.CustomEntities;
 using SocialMedia.Core.DTOs;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Interfaces;
 using SocialMedia.Core.QueryFilters;
-using System;
+using SocialMedia.Infrastructure.Interfaces;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace SocialMedia.Api.Controllers
 {
+    [Authorize]
+    [Produces("application/json")] //Para que el swagger sólo considere este Media type
     [Route("api/[controller]")]
     [ApiController]
     public class PostController : ControllerBase
@@ -19,10 +24,12 @@ namespace SocialMedia.Api.Controllers
         //private readonly IPostRepository _postService;
         private readonly IPostService _postService;
         private readonly IMapper _mapper;
-        public PostController(IPostService postService, IMapper mapper)
+        private readonly IUriService _uriService;
+        public PostController(IPostService postService, IMapper mapper, IUriService uriService)
         {
             _postService = postService;
             _mapper = mapper;
+            _uriService = uriService;
         }
 
         //[HttpGet]
@@ -32,8 +39,13 @@ namespace SocialMedia.Api.Controllers
         //    return Ok(posts);
         //}
 
-        [HttpGet]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
+        /// <summary>
+        /// Retrieve all posts
+        /// </summary>
+        /// <param name="filters">Filters to apply</param>
+        /// <returns></returns>
+        [HttpGet(Name = nameof(GetPosts))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ApiResponse<IEnumerable<PostDTO>>))]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         //public IActionResult GetPosts(int? userId, DateTime? date, string description)
         public IActionResult GetPosts([FromQuery]PostQueryFilter filters)
@@ -48,7 +60,26 @@ namespace SocialMedia.Api.Controllers
             //    UserId = x.UserId
             //});
             var postsDTOs = _mapper.Map<IEnumerable<PostDTO>>(posts);
-            var response = new ApiResponse<IEnumerable<PostDTO>>(postsDTOs);
+            //var response = new ApiResponse<IEnumerable<PostDTO>>(postsDTOs);
+
+            var metadata = new Metadata
+            {
+                TotalCount = posts.TotalCount,
+                PageSize = posts.PageSize,
+                CurrentPage = posts.CurrentPage,
+                TotalPages = posts.TotalPages,
+                HasPreviousPage = posts.HasPreviousPage,
+                HasNextPage = posts.HasNextPage,
+                PreviousPageUrl = _uriService.GetPostPaginationUri(filters, Url.RouteUrl(nameof(GetPosts))).ToString(),
+                NextPageUrl = _uriService.GetPostPaginationUri(filters, Url.RouteUrl(nameof(GetPosts))).ToString()
+            };
+
+            var response = new ApiResponse<IEnumerable<PostDTO>>(postsDTOs)
+            {
+                Meta = metadata
+            };
+
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
             return Ok(response);
         }
 
