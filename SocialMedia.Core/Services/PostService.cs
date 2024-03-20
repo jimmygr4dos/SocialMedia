@@ -94,13 +94,19 @@ namespace SocialMedia.Core.Services
 
         public async Task<bool> UpdatePost(Post post)
         {
-            _unit.PostRepository.Update(post);
+            //Permite modificar sólo Description e Image
+            var existingPost = await _unit.PostRepository.GetById(post.Id);
+            existingPost.Description = post.Description;
+            existingPost.Image = post.Image;
+
+            _unit.PostRepository.Update(existingPost);
             await _unit.SaveChangesAsync();
             return true;
         }
         public async Task<bool> DeletePost(int id)
         {
             await _unit.PostRepository.Delete(id);
+            await _unit.SaveChangesAsync();
             return true;
         }
 

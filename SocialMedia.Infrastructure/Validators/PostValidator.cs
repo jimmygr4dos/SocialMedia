@@ -12,7 +12,12 @@ namespace SocialMedia.Infrastructure.Validators
         {
             RuleFor(post => post.Description)
                 .NotNull()
-                .Length(10, 500);
+                .WithMessage("La descripción no puede ser nula");
+
+            RuleFor(post => post.Description)
+                .Length(10, 500)
+                .WithMessage("La longitud de la descripción debe estar entre 10 y 500 caracteres");
+
             RuleFor(post => post.Date)
                 .NotNull()
                 .LessThan(DateTime.Now);

@@ -14,6 +14,7 @@ using SocialMedia.Core.CustomEntities;
 using SocialMedia.Core.Interfaces;
 using SocialMedia.Core.Services;
 using SocialMedia.Infrastructure.Data;
+using SocialMedia.Infrastructure.Extensions;
 using SocialMedia.Infrastructure.Filters;
 using SocialMedia.Infrastructure.Interfaces;
 using SocialMedia.Infrastructure.Options;
@@ -61,41 +62,46 @@ namespace SocialMedia.Api
             });
 
             //Agrega las opciones por defecto para la paginación desde el appsettings
-            services.Configure<PaginationOptions>(Configuration.GetSection("Pagination"));
+            //services.Configure<PaginationOptions>(Configuration.GetSection("Pagination"));
             //Agrega las opciones por defecto para la encriptación del password desde el appsettings
-            services.Configure<PasswordOptions>(Configuration.GetSection("PasswordOptions"));
+            //services.Configure<PasswordOptions>(Configuration.GetSection("PasswordOptions"));
+            services.AddOptions(Configuration);
 
-            services.AddDbContext<SocialMediaContext>(options => 
-                options.UseSqlServer(Configuration.GetConnectionString("SocialMedia"))
-            );
+            //Add DBContext
+            //services.AddDbContext<SocialMediaContext>(options => 
+            //    options.UseSqlServer(Configuration.GetConnectionString("SocialMedia"))
+            //);
+            services.AddDBContexts(Configuration);
 
             //Dependency Injection
-            services.AddTransient<IPostService, PostService>();
-            services.AddTransient<ISecurityService, SecurityService>();
-            //services.AddTransient<IPostRepository, PostRepository>();
-            //services.AddTransient<IUserRepository, UserRepository>();
-            services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
-            services.AddTransient<IUnitOfWork, UnitOfWork>();
-            services.AddSingleton<IPasswordService, PasswordService>();
-            services.AddSingleton<IUriService>(provider =>
-            {
-                var accesor = provider.GetRequiredService<IHttpContextAccessor>();
-                var request = accesor.HttpContext.Request;
-                var absoluteUri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
-                return new UriService(absoluteUri);
-            });
+            //services.AddTransient<IPostService, PostService>();
+            //services.AddTransient<ISecurityService, SecurityService>();
+            ////services.AddTransient<IPostRepository, PostRepository>();
+            ////services.AddTransient<IUserRepository, UserRepository>();
+            //services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
+            //services.AddTransient<IUnitOfWork, UnitOfWork>();
+            //services.AddSingleton<IPasswordService, PasswordService>();
+            //services.AddSingleton<IUriService>(provider =>
+            //{
+            //    var accesor = provider.GetRequiredService<IHttpContextAccessor>();
+            //    var request = accesor.HttpContext.Request;
+            //    var absoluteUri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
+            //    return new UriService(absoluteUri);
+            //});
+            services.AddServices();
 
             //Agregar Swagger
-            services.AddSwaggerGen(doc =>
-            {
-                doc.SwaggerDoc("v1", new OpenApiInfo { Title = "Social Media API", Version = "v1" });
+            //services.AddSwaggerGen(doc =>
+            //{
+            //    doc.SwaggerDoc("v1", new OpenApiInfo { Title = "Social Media API", Version = "v1" });
 
-                //Agregar los comentarios "summary" de cada método
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                doc.IncludeXmlComments(xmlPath);
-            });
+            //    //Agregar los comentarios "summary" de cada método
+            //    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            //    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            //    doc.IncludeXmlComments(xmlPath);
+            //});
             //Se genera un json en la url localhost:port/swagger/v1/swagger.json
+            services.AddSwagger($"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
 
             //Agregar Authentication JWT, siempre agregarlo antes de MVC
             services.AddAuthentication(options =>
